@@ -1123,6 +1123,19 @@ class RoutingTest < Test::Unit::TestCase
     get '/', {}, { 'HTTP_ACCEPT' => 'text/xml' }
     assert_body 'text/xml;charset=utf-8'
   end
+  
+  it 'prefers explicitly defined routes over low-priority generic types' do
+    mock_app {
+      get('/', :provides => 'application/json') { content_type }
+      get('/', :provides => 'text/html') { content_type }
+    }
+    get '/', {}, { 'HTTP_ACCEPT' => 'text/html' }
+    assert_body 'text/html'
+    get '/', {}, { 'HTTP_ACCEPT' => 'application/json' }
+    assert_body 'application/json'
+    get '/', {}, { 'HTTP_ACCEPT' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' }
+    assert_body 'text/html'
+  end
 
   it 'passes a single url param as block parameters when one param is specified' do
     mock_app {
